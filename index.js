@@ -1,33 +1,24 @@
 'use strict';
 
 const express = require('express');
-const path = require('path');
-const { createServer } = require('http');
+const { Server } = require('ws');
 
-const WebSocket = require('ws');
+const PORT = process.env.PORT || 3000;
+const INDEX = '/index.html';
 
-const app = express();
-app.use(express.static(path.join(__dirname, '/public')));
+const server = express()
+  .use((req, res) => res.sendFile(INDEX, { root: __dirname }))
+  .listen(PORT, () => console.log(`Listening on ${PORT}`));
 
-const server = createServer(app);
-const wss = new WebSocket.Server({ server });
+const wss = new Server({ server });
 
-wss.on('connection', function (ws) {
-  const id = setInterval(function () {
-    ws.send(JSON.stringify(process.memoryUsage()), function () {
-      //
-      // Ignoring errors.
-      //
-    });
-  }, 100);
-  console.log('started client interval');
+wss.on('connection', (ws) => {
+  console.log('Client connected');
+  ws.on('close', () => console.log('Client disconnected'));
+});
 
-  ws.on('close', function () {
-    console.log('stopping client interval');
-    clearInterval(id);
+setInterval(() => {
+  wss.clients.forEach((client) => {
+    client.send(new Date().toTimeString());
   });
-});
-
-server.listen(8080, function () {
-  console.log('Listening on http://0.0.0.0:8080');
-});
+}, 1000);
