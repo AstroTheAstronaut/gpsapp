@@ -2,6 +2,7 @@
 const express = require('express');
 const app = express();
 const port = 3000;
+const INDEX = '/index.html';
 
 app.get('/', (req, res) => res.sendFile(INDEX, { root: __dirname }));
 
